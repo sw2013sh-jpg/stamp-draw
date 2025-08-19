@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>스탬프 투어 추첨</title>
+<style>
+body {
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+    padding: 50px;
+    background-color: #e0f7fa;
+    background-image: url('https://images.unsplash.com/photo-1526223263457-184c004f49c5?auto=format&fit=crop&w=1470&q=80');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    color: #004d40;
+    overflow: hidden;
+}
+h1 {
+    color: #ff9800;
+    text-shadow: 2px 2px #004d40;
+}
+#result {
+    margin-top: 30px;
+    font-size: 2em;
+    font-weight: bold;
+    color: #d32f2f;
+    text-shadow: 1px 1px #fff;
+    min-height: 80px;
+}
+button {
+    padding: 15px 40px;
+    font-size: 1.2em;
+    background-color: #ffeb3b;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    margin-top: 20px;
+}
+button:hover {
+    transform: scale(1.1);
+    background-color: #ffc107;
+}
+button:disabled {
+    background-color: #9e9e9e;
+    cursor: not-allowed;
+}
+
+/* 폭죽 효과 */
+.firework {
+    position: fixed;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 1;
+    animation: explode linear forwards;
+    box-shadow: 0 0 10px #fff;
+}
+
+@keyframes explode {
+    0% {
+        transform: scale(1) translate(0,0);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(var(--scale,3)) translate(var(--x,0), var(--y,0));
+        opacity: 0;
+    }
+}
+</style>
+</head>
+<body>
+
+<h1>🎉 스탬프 투어 추첨 🎉</h1>
+<p>아래 버튼을 눌러서 즉석에서 상품을 확인하세요!</p>
+
+<button onclick="draw()">🎲 추첨하기</button>
+
+<div id="result"></div>
+
+<script>
+// 상품 배열
+let prizes = [];
+for(let i=0;i<5;i++) prizes.push({text:"🏆 1등 당첨! 2만원 상품!", level:3});
+for(let i=0;i<25;i++) prizes.push({text:"🎉 2등 당첨! 1만원 상품!", level:2});
+for(let i=0;i<40;i++) prizes.push({text:"🎁 3등 당첨! JJ 키링!", level:1});
+
+// 섞기
+for(let i=prizes.length-1;i>0;i--){
+    let j=Math.floor(Math.random()*(i+1));
+    [prizes[i],prizes[j]]=[prizes[j],prizes[i]];
+}
+
+function draw(){
+    const btn=document.querySelector("button");
+    const resultDiv=document.getElementById("result");
+    btn.disabled=true;
+    btn.innerText="추첨 중... ⏳";
+
+    if(prizes.length===0){
+        resultDiv.innerText="모든 상품이 소진되었습니다!";
+        btn.innerText="추첨 종료 ❌";
+        return;
+    }
+
+    // 두구두구 2초, 0.3초마다 추가
+    let dots="두구";
+    resultDiv.innerText=dots;
+    let count=0;
+    const interval=setInterval(()=>{
+        dots+=" 두구";
+        resultDiv.innerText=dots;
+        count++;
+        if(count>=6){ // 약 1.8초
+            clearInterval(interval);
+            const prize=prizes.pop();
+            resultDiv.innerText=prize.text;
+            btn.innerText="추첨 완료 ✅";
+
+            // 폭죽 생성, 등수별 화려함
+            let fireworkCount = prize.level * 20; // 3등:20, 2등:40, 1등:60
+            for(let i=0;i<fireworkCount;i++){
+                createFirework(prize.level);
+            }
+        }
+    },300);
+}
+
+// 폭죽 생성
+function createFirework(level){
+    const firework=document.createElement("div");
+    firework.className="firework";
+
+    const colors=["#ffeb3b","#f44336","#00e676","#2196f3","#ff4081","#ff9800","#9c27b0","#ffffff","#ff5722"];
+    firework.style.background=colors[Math.floor(Math.random()*colors.length)];
+
+    // 다층 퍼짐 (zIndex로 층 분리)
+    const layer = Math.floor(Math.random()*level) + 1; // 1~level층
+    firework.style.zIndex = layer;
+
+    // 층별 거리 증가 + 랜덤성 추가
+    const distance = layer * 200 + Math.random()*100;
+    const x=(Math.random()-0.5)*distance + "px";
+    const y=(Math.random()-0.5)*distance + "px";
+    firework.style.setProperty('--x', x);
+    firework.style.setProperty('--y', y);
+
+    // 스케일과 속도 다양화
+    const scale=(Math.random()*2 + 2*layer).toFixed(1);
+    const duration=(Math.random()*1.2 + 0.8).toFixed(2); // 0.8~2초
+    firework.style.setProperty('--scale', scale);
+    firework.style.animationDuration=duration+"s";
+
+    document.body.appendChild(firework);
+    setTimeout(()=>firework.remove(), parseFloat(duration)*1000);
+}
+</script>
+
+</body>
+</html>
